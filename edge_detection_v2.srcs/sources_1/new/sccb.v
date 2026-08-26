@@ -159,7 +159,7 @@ module ov5640_iic(
         
 
     always @(*) begin
-        if(dir == 1'b1)    
+        if(dir == 1'b1) // Read Condition   
             case(cfg_cnt)
                 0:
                     if(busy == 1'b1)
@@ -217,7 +217,7 @@ module ov5640_iic(
                 default:iic_sda_reg = 1'b1;     
             endcase
         else  
-            case(cfg_cnt)
+            case(cfg_cnt) // Write Condition 
                 0:
                     if(busy == 1'b1)
                         iic_sda_reg = 1'b0;
@@ -272,3 +272,29 @@ module ov5640_iic(
     assign      dir         =   w_data_reg[24];  
 
 endmodule
+
+
+/*
+Separation of Protocols: The two blocks split the I2C Write (dir == 0) and I2C Read (dir == 1) operations. While the first half of both transactions is identical, they diverge completely after state 27.
+
+Write Sequence (dir == 0): A straightforward, linear operation.
+
+States 0-26: Sends Device ID (Write bit) and 16-bit Register Address.
+
+States 28-35: Sends the 8-bit Data payload.
+
+State 37: Issues the STOP condition.
+
+Read Sequence (dir == 1): Requires a "dummy write" followed by a restart.
+
+States 0-26: Sends the identical "dummy write" (Device ID + 16-bit Address) to tell the camera which register to look at.
+
+State 28: Issues a Repeated START condition to flip the data direction on the bus.
+
+States 29-36: Sends the Device ID again, this time with a Read bit.
+
+States 38-45: The FPGA releases the SDA pin so the camera can transmit the requested data back.
+
+Hardware Efficiency: If combined into one case, the author would have had to write if (dir == 1)... else... inside every single state from 28 to 47. Splitting them creates cleaner multiplexer logic during FPGA synthesis and makes the code much easier to read and debug.
+
+*/
