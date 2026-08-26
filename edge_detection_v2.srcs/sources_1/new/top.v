@@ -83,7 +83,7 @@ module top(
     // 2. POWER & CONFIGURATION (OV5640 Boot Sequence)
     // =======================================================
     wire sccb_ready;
-
+    
     pwd power_sequencer (
         .sclk               (clk_24M),
         .s_rst_n            (sys_rst_n),
