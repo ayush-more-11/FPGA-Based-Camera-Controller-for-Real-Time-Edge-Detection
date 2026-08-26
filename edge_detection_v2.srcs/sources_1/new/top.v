@@ -19,7 +19,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 `timescale 1ns / 1ps
 
-
 module top(
     input  wire        sys_clk_50M, // 50 MHz physical oscillator from Artix-7
     input  wire        sys_rst_n,   // Active-low system reset button
@@ -59,6 +58,11 @@ module top(
     output wire [3:0]  vga_r,
     output wire [3:0]  vga_g,
     output wire [3:0]  vga_b
+    
+    // ------------------------------------
+    // Debug Output
+    // ------------------------------------
+    //output wire        led_cfg_done // [ADDED] Physical LED to check I2C config
 );
 
     // =======================================================
@@ -99,6 +103,7 @@ module top(
     ov5640_config camera_config (
         .clk_24M            (clk_24M),
         .s_rst_n            (sccb_ready), 
+        //.cfg_done           (led_cfg_done), // [ADDED] Wire internal signal to physical LED
         .iic_clk            (cam_sioc),
         .iic_sda            (cam_siod)
     );
@@ -146,10 +151,18 @@ module top(
     wire [10:0]  sdram_rd_fifo_count;
     wire        sdram_rd_fifo_wr_en;
     wire [15:0] sdram_rd_fifo_din;
+    
+    // [ADDED] Moved these declarations up so the SDRAM controller can see them
+    wire raw_hsync;
+    wire raw_vsync;
+    wire video_on;
 
     sdram_controller memory_manager (
         .clk_100M           (clk_100M),
         .rst_n              (sys_rst_n),
+        
+        .cam_vsync          (cam_vsync), // [ADDED] Route camera frame start
+        .vga_vsync          (raw_vsync), // [ADDED] Route VGA frame start
         
         // Write FIFO Interface
         .fifo_wr_count      (sdram_wr_fifo_count),
@@ -196,10 +209,6 @@ module top(
     // =======================================================
     // 7. VGA DISPLAY (25 MHz Domain)
     // =======================================================
-    wire raw_hsync;
-    wire raw_vsync;
-    wire video_on;
-
     vga_controller vga_timing (
         .i_clk_25M          (clk_25M),
         .i_reset            (~sys_rst_n),

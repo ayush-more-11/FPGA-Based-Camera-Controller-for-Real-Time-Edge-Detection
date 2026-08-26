@@ -56,10 +56,6 @@ if {$::dispatch::connected} {
 }
 
 OPTRACE "synth_1" START { ROLLUP_AUTO }
-set_param chipscope.maxJobs 4
-set_param checkpoint.writeSynthRtdsInDcp 1
-set_msg_config -id {Synth 8-256} -limit 10000
-set_msg_config -id {Synth 8-638} -limit 10000
 OPTRACE "Creating in-memory project" START { }
 create_project -in_memory -part xc7a35tftg256-1
 
@@ -86,12 +82,12 @@ read_verilog -library xil_defaultlib {
   D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/vga_fifo_read.v
   D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/top.v
 }
-read_ip -quiet d:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/ip/async_fifo_16x2048/async_fifo_16x2048.xci
+read_ip -quiet D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/ip/async_fifo_16x2048/async_fifo_16x2048.xci
 set_property used_in_implementation false [get_files -all d:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/async_fifo_16x2048/async_fifo_16x2048.xdc]
 set_property used_in_implementation false [get_files -all d:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/async_fifo_16x2048/async_fifo_16x2048_clocks.xdc]
 set_property used_in_implementation false [get_files -all d:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/async_fifo_16x2048/async_fifo_16x2048_ooc.xdc]
 
-read_ip -quiet d:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0.xci
+read_ip -quiet D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0.xci
 set_property used_in_implementation false [get_files -all d:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_board.xdc]
 set_property used_in_implementation false [get_files -all d:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.xdc]
 set_property used_in_implementation false [get_files -all d:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_ooc.xdc]

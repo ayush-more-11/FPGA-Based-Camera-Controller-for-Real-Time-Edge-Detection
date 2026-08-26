@@ -34,13 +34,12 @@ module ov5640_capture(
 );
 
     reg [7:0] byte_latched; 
-    reg       byte_flag;    // 0 = waiting for High Byte, 1 = waiting for Low Byte
+    reg       byte_flag;    
 
-    // Edge detection for VSYNC to reset the frame
     reg vsync_prev;
     
     always @(posedge pclk or negedge rst_n) begin
-        if (!rst_n) begin
+        if (rst_n == 1'b0) begin  // <--- THE FIX: Explicit binary check
             byte_latched <= 8'd0;
             byte_flag    <= 1'b0;
             pixel_valid  <= 1'b0;
@@ -49,27 +48,21 @@ module ov5640_capture(
         end else begin
             vsync_prev <= vsync;
             
-            // If VSYNC goes HIGH (start of a new frame), reset the byte state machine
-            // Note: OV5640 VSYNC polarity is positive by default in our config
             if (vsync == 1'b1 && vsync_prev == 1'b0) begin
                 byte_flag   <= 1'b0;
                 pixel_valid <= 1'b0;
             end 
-            // Only capture data when HREF is HIGH (active video line)
             else if (href == 1'b1) begin
                 if (byte_flag == 1'b0) begin
-                    // Catch the High Byte
                     byte_latched <= cam_data;
                     byte_flag    <= 1'b1;
-                    pixel_valid  <= 1'b0; // Pixel not complete yet
+                    pixel_valid  <= 1'b0; 
                 end else begin
-                    // Catch the Low Byte, stitch it, and output
                     pixel_data   <= {byte_latched, cam_data};
                     byte_flag    <= 1'b0;
-                    pixel_valid  <= 1'b1; // Full 16-bit pixel is ready!
+                    pixel_valid  <= 1'b1; 
                 end
             end 
-            // When HREF is LOW (blanking period between lines), do not output
             else begin
                 byte_flag   <= 1'b0;
                 pixel_valid <= 1'b0;

@@ -5,15 +5,14 @@ module		ov5640_config(
 	input		s_rst_n,
 	
 	output		wire	iic_clk,
-	inout				iic_sda
-	//debug 
+	inout				iic_sda,
+	output wire        cfg_done
 );
 localparam NUM_REG = 254;
 localparam DELAY_20ms = 19'd480_000; // 20ms delay at 24MHz = 480,000 clock cycles
 
 wire [31:0]	cfg_array[NUM_REG-1:0];
 reg	[7:0] cfg_index;
-wire cfg_done;		
 
 reg	[15:0] cnt_200us;
 reg	start;

@@ -1,38 +1,22 @@
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 26.08.2026 12:31:42
-// Design Name: 
-// Module Name: sdram_controller
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 `timescale 1ns / 1ps
 
 module sdram_controller (
     input  wire        clk_100M,    // 100 MHz clock
     input  wire        rst_n,       // Active-low reset
 
+    // --- NEW VSYNC INPUTS ---
+    input  wire        cam_vsync,   // [FIXED] Properly declared inside ports
+    input  wire        vga_vsync,   // [FIXED] Properly declared inside ports
+
     // --- Write FIFO Interface (From OV5640) ---
-    input  wire [10:0]  fifo_wr_count, // How many pixels are waiting in Write FIFO
-    output reg         fifo_wr_rd_en, // Read enable to pull pixels out of Write FIFO
-    input  wire [15:0] fifo_wr_data,  // Pixel data from Write FIFO
+    input  wire [10:0] fifo_wr_count, 
+    output reg         fifo_wr_rd_en, 
+    input  wire [15:0] fifo_wr_data,  
 
     // --- Read FIFO Interface (To VGA) ---
-    input  wire [10:0]  fifo_rd_count, // How many pixels are already in Read FIFO
-    output reg         fifo_rd_wr_en, // Write enable to push pixels into Read FIFO
-    output reg  [15:0] fifo_rd_data,  // Pixel data to Read FIFO
+    input  wire [10:0] fifo_rd_count, 
+    output reg         fifo_rd_wr_en, 
+    output reg  [15:0] fifo_rd_data,  
 
     // --- Physical SDRAM Pins (To EDGE Board) ---
     output wire        sdram_cke,
@@ -40,22 +24,22 @@ module sdram_controller (
     output wire        sdram_ras_n,
     output wire        sdram_cas_n,
     output wire        sdram_we_n,
-    output wire [1:0]  sdram_ba,    // 4 Banks
-    output wire [12:0] sdram_a,     // 8192 Rows, 512 Columns[cite: 2]
+    output wire [1:0]  sdram_ba,    
+    output wire [12:0] sdram_a,     
     output wire [1:0]  sdram_dqm,
-    inout  wire [15:0] sdram_dq     // 16-bit Data Bus[cite: 2]
+    inout  wire [15:0] sdram_dq     
 );
 
     // =========================================================
-    // SDRAM COMMAND DEFINITIONS (CS_N, RAS_N, CAS_N, WE_N)
+    // SDRAM COMMAND DEFINITIONS
     // =========================================================
-    localparam CMD_LMR   = 4'b0000; // Load Mode Register
-    localparam CMD_REF   = 4'b0001; // Auto Refresh
-    localparam CMD_PRE   = 4'b0010; // Precharge
-    localparam CMD_ACT   = 4'b0011; // Bank Activate
-    localparam CMD_WRITE = 4'b0100; // Write
-    localparam CMD_READ  = 4'b0101; // Read
-    localparam CMD_NOP   = 4'b0111; // No Operation
+    localparam CMD_LMR   = 4'b0000; 
+    localparam CMD_REF   = 4'b0001; 
+    localparam CMD_PRE   = 4'b0010; 
+    localparam CMD_ACT   = 4'b0011; 
+    localparam CMD_WRITE = 4'b0100; 
+    localparam CMD_READ  = 4'b0101; 
+    localparam CMD_NOP   = 4'b0111; 
 
     // =========================================================
     // FSM STATES
@@ -68,19 +52,19 @@ module sdram_controller (
     reg [3:0]  state;
     reg [3:0]  sdram_cmd;
     reg [15:0] delay_cnt;       
-    reg [9:0]  burst_cnt;        // Tracks our 256-pixel bursts
+    reg [9:0]  burst_cnt;        
     
     // Address & Data Registers
     reg [12:0] addr_reg;
     reg [1:0]  bank_reg;
     reg [15:0] dq_out;
-    reg        dq_dir;           // 1 for Write (Output), 0 for Read (Input)
+    reg        dq_dir;           
     
-    // Refresh Counter (Needs to trigger every 7.5us = 750 clock cycles)
+    // Refresh Counter 
     reg [9:0]  refresh_cnt;
     reg        refresh_req;
 
-    // 21-bit Address tracking (For 640x480 = 307,200 pixels)
+    // 21-bit Address tracking
     reg [21:0] wr_addr_ptr, rd_addr_ptr;
 
     // Tie physical pins
@@ -103,10 +87,29 @@ module sdram_controller (
             refresh_req <= 1'b1;
         end else begin
             refresh_cnt <= refresh_cnt + 1'b1;
-            if (state == S_REF_CMD) refresh_req <= 1'b0; // Clear request when served
+            if (state == S_REF_CMD) refresh_req <= 1'b0; 
         end
     end
 
+    // =========================================================
+    // CROSS-DOMAIN VSYNC EDGE DETECTORS (100 MHz Domain)
+    // =========================================================
+    reg [2:0] cam_sync;
+    reg [2:0] vga_sync;
+    
+    always @(posedge clk_100M or negedge rst_n) begin
+        if (!rst_n) begin
+            cam_sync <= 3'd0;
+            vga_sync <= 3'd0;
+        end else begin
+            cam_sync <= {cam_sync[1:0], cam_vsync};
+            vga_sync <= {vga_sync[1:0], vga_vsync};
+        end
+    end
+    
+    wire cam_vsync_pulse = (cam_sync[2:1] == 2'b01);
+    wire vga_vsync_pulse = (vga_sync[2:1] == 2'b01);
+    
     // =========================================================
     // MAIN STATE MACHINE
     // =========================================================
@@ -120,14 +123,12 @@ module sdram_controller (
             wr_addr_ptr <= 22'd0;
             rd_addr_ptr <= 22'd0;
         end else begin
-            // Default command is NOP to prevent accidental operations
             sdram_cmd     <= CMD_NOP;
             fifo_wr_rd_en <= 1'b0;
             fifo_rd_wr_en <= 1'b0;
 
             case (state)
                 S_INIT_WAIT: begin
-                    // Wait 200us (20,000 cycles at 100MHz) for SDRAM power stability
                     if (delay_cnt == 16'd20000) begin
                         state <= S_INIT_CMD;
                         delay_cnt <= 0;
@@ -135,48 +136,48 @@ module sdram_controller (
                 end
 
                 S_INIT_CMD: begin
-                    // Simplified Init: Precharge All -> Auto Refresh -> Load Mode Register
-                    // Configures SDRAM for CAS Latency 2, Burst Length of Full Page
                     if (delay_cnt == 0) sdram_cmd <= CMD_PRE;
                     else if (delay_cnt == 4) sdram_cmd <= CMD_REF;
                     else if (delay_cnt == 12) begin
                         sdram_cmd <= CMD_LMR;
-                        addr_reg  <= 13'b000_0_00_010_0111; // CAS 2, Full Page Burst
+                        addr_reg  <= 13'b000_0_00_010_0111; 
                     end
                     else if (delay_cnt == 15) state <= S_IDLE;
                     delay_cnt <= delay_cnt + 1'b1;
                 end
 
                 S_IDLE: begin
-                    dq_dir <= 1'b0; // Ensure data bus is input
-                    // 1. Refresh has highest priority
+                    dq_dir <= 1'b0; 
+                    
+                    // --- THE FIX: Hard Reset Pointers on Frame Start ---
+                    if (cam_vsync_pulse) wr_addr_ptr <= 22'd0;
+                    if (vga_vsync_pulse) rd_addr_ptr <= 22'd0;
+
+                    // [FIXED] Removed the duplicated if(refresh_req) block
                     if (refresh_req) begin
                         state <= S_REF_PRE;
                     end 
-                    // 2. Write Priority: If Write FIFO has >= 256 pixels
                     else if (fifo_wr_count >= 10'd256) begin
                         state    <= S_WRITE_ACT;
                         bank_reg <= wr_addr_ptr[21:20]; 
-                        addr_reg <= wr_addr_ptr[19:9];  // Row Address
+                        addr_reg <= wr_addr_ptr[19:9];  
                     end 
-                    // 3. Read Priority: If Read FIFO has space for >= 256 pixels
-                    // (Assuming 2048 depth FIFO, threshold is < 1792)
-                    else if (fifo_rd_count < 10'd1792) begin
+                    else if (fifo_rd_count < 11'd1792) begin
                         state    <= S_READ_ACT;
                         bank_reg <= rd_addr_ptr[21:20];
-                        addr_reg <= rd_addr_ptr[19:9];  // Row Address
+                        addr_reg <= rd_addr_ptr[19:9];  
                     end
                 end
 
                 S_REF_PRE: begin
                     sdram_cmd <= CMD_PRE;
-                    addr_reg  <= 13'b0010000000000; // Precharge All Banks (A10 = 1)
+                    addr_reg  <= 13'b0010000000000; 
                     state     <= S_REF_CMD;
                 end
 
                 S_REF_CMD: begin
                     sdram_cmd <= CMD_REF;
-                    state     <= S_IDLE; // Simplified, assumes adequate tRC delay loops
+                    state     <= S_IDLE; 
                 end
 
                 S_WRITE_ACT: begin
@@ -186,14 +187,13 @@ module sdram_controller (
 
                 S_WRITE_CMD: begin
                     sdram_cmd <= CMD_WRITE;
-                    addr_reg  <= {4'b0000, wr_addr_ptr[8:0]}; // Column Address
-                    dq_dir    <= 1'b1; // Turn on physical outputs
+                    addr_reg  <= {4'b0000, wr_addr_ptr[8:0]}; 
+                    dq_dir    <= 1'b1; 
                     burst_cnt <= 10'd0;
                     state     <= S_WRITE_DAT;
                 end
 
                 S_WRITE_DAT: begin
-                    // Stream 256 pixels from FIFO directly into SDRAM
                     fifo_wr_rd_en <= 1'b1;
                     dq_out        <= fifo_wr_data;
                     wr_addr_ptr   <= wr_addr_ptr + 1'b1;
@@ -205,7 +205,6 @@ module sdram_controller (
                         burst_cnt <= burst_cnt + 1'b1;
                     end
                     
-                    // Frame wrap-around check
                     if (wr_addr_ptr == 22'd307200) wr_addr_ptr <= 22'd0;
                 end
 
@@ -216,17 +215,15 @@ module sdram_controller (
 
                 S_READ_CMD: begin
                     sdram_cmd <= CMD_READ;
-                    addr_reg  <= {4'b0000, rd_addr_ptr[8:0]}; // Column Address
+                    addr_reg  <= {4'b0000, rd_addr_ptr[8:0]}; 
                     burst_cnt <= 10'd0;
                     state     <= S_READ_DAT;
                 end
 
                 S_READ_DAT: begin
-                    // Due to CAS Latency of 2, the first valid data arrives 2 cycles later
-                    // We catch 256 pixels and push them into the Read FIFO
                     if (burst_cnt >= 2) begin
                         fifo_rd_wr_en <= 1'b1;
-                        fifo_rd_data  <= sdram_dq; // Read physical pins
+                        fifo_rd_data  <= sdram_dq; 
                         rd_addr_ptr   <= rd_addr_ptr + 1'b1;
                     end
                     
@@ -237,14 +234,12 @@ module sdram_controller (
                         burst_cnt <= burst_cnt + 1'b1;
                     end
 
-                    // Frame wrap-around check
                     if (rd_addr_ptr == 22'd307200) rd_addr_ptr <= 22'd0;
                 end
 
                 S_PRECHARGE: begin
-                    // Issue Burst Stop / Precharge to close the active row
                     sdram_cmd <= CMD_PRE;
-                    addr_reg  <= 13'b0010000000000; // Precharge All Banks
+                    addr_reg  <= 13'b0010000000000; 
                     state     <= S_IDLE;
                 end
 

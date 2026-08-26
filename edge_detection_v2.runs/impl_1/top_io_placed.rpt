@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version              : Vivado v.2024.2 (win64) Build 5239630 Fri Nov 08 22:35:27 MST 2024
-| Date                      : Wed Aug 26 15:27:29 2026
+| Date                      : Wed Aug 26 20:29:51 2026
 | Host                      : LAPTOP-SQJOI1TF running 64-bit major release  (build 9200)
 | Command                   : report_io -file top_io_placed.rpt
 | Design                    : top
@@ -105,7 +105,7 @@ Table of Contents
 | E4         |              | High Range | VCCO_35                      | VCCO        |             |      35 |            |      |                     |                      |    3.30 |            |           |          |      |                  |              |                   |              |
 | E5         |              | High Range | IO_L13N_T2_MRCC_35           | User IO     |             |      35 |            |      |                     |                      |         |            |           |          |      |                  |              |                   |              |
 | E6         |              | High Range | IO_0_35                      | User IO     |             |      35 |            |      |                     |                      |         |            |           |          |      |                  |              |                   |              |
-| E7         |              | Dedicated  | CFGBVS_0                     | Config      |             |       0 |            |      |                     |                      |         |            |           |          |      |                  |              |                   |              |
+| E7         |              | Dedicated  | CFGBVS_0                     | Config      |             |       0 |            |      |                     |                      |    3.30 |            |           |          |      |                  |              |                   |              |
 | E8         |              | Dedicated  | CCLK_0                       | Config      |             |       0 |            |      |                     |                      |         |            |           |          |      |                  |              |                   |              |
 | E9         |              |            | GND                          | GND         |             |         |            |      |                     |                      |     0.0 |            |           |          |      |                  |              |                   |              |
 | E10        |              |            | VCCBRAM                      | VCCBRAM     |             |         |            |      |                     |                      |         |            |           |          |      |                  |              |                   |              |
@@ -200,7 +200,7 @@ Table of Contents
 | L3         |              | High Range | IO_L23P_T3_35                | User IO     |             |      35 |            |      |                     |                      |         |            |           |          |      |                  |              |                   |              |
 | L4         | sys_rst_n    | High Range | IO_L1P_T0_34                 | INPUT       | LVCMOS33    |      34 |            |      |                     |                 NONE |         | FIXED      |           |          |      | NONE             |              |                   |              |
 | L5         |              | High Range | IO_0_34                      | User IO     |             |      34 |            |      |                     |                      |         |            |           |          |      |                  |              |                   |              |
-| L6         |              | Dedicated  | VCCO_0                       | VCCO        |             |       0 |            |      |                     |                      |   any** |            |           |          |      |                  |              |                   |              |
+| L6         |              | Dedicated  | VCCO_0                       | VCCO        |             |       0 |            |      |                     |                      |    3.30 |            |           |          |      |                  |              |                   |              |
 | L7         |              | Dedicated  | TCK_0                        | Config      |             |       0 |            |      |                     |                      |         |            |           |          |      |                  |              |                   |              |
 | L8         |              |            | VCCINT                       | VCCINT      |             |         |            |      |                     |                      |         |            |           |          |      |                  |              |                   |              |
 | L9         |              | Dedicated  | PROGRAM_B_0                  | Config      |             |       0 |            |      |                     |                      |         |            |           |          |      |                  |              |                   |              |
@@ -293,6 +293,5 @@ Table of Contents
 | T16        |              |            | GND                          | GND         |             |         |            |      |                     |                      |     0.0 |            |           |          |      |                  |              |                   |              |
 +------------+--------------+------------+------------------------------+-------------+-------------+---------+------------+------+---------------------+----------------------+---------+------------+-----------+----------+------+------------------+--------------+-------------------+--------------+
 * Default value
-** Special VCCO requirements may apply. Please consult the device family datasheet for specific guideline on VCCO requirements.
 
 

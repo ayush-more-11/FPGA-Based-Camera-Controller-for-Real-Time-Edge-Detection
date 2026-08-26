@@ -97,8 +97,6 @@ proc step_failed { step } {
 OPTRACE "impl_1" END { }
 }
 
-set_msg_config -id {Synth 8-256} -limit 10000
-set_msg_config -id {Synth 8-638} -limit 10000
 
 OPTRACE "impl_1" START { ROLLUP_1 }
 OPTRACE "Phase: Init Design" START { ROLLUP_AUTO }
@@ -107,7 +105,6 @@ set ACTIVE_STEP init_design
 set rc [catch {
   create_msg_db init_design.pb
   set_param chipscope.maxJobs 4
-  set_param checkpoint.writeSynthRtdsInDcp 1
   set_param runs.launchOptions { -jobs 12  }
 OPTRACE "create in-memory project" START { }
   create_project -in_memory -part xc7a35tftg256-1
@@ -123,8 +120,8 @@ OPTRACE "set parameters" START { }
 OPTRACE "set parameters" END { }
 OPTRACE "add files" START { }
   add_files -quiet D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.runs/synth_1/top.dcp
-  read_ip -quiet d:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/ip/async_fifo_16x2048/async_fifo_16x2048.xci
-  read_ip -quiet d:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0.xci
+  read_ip -quiet D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/ip/async_fifo_16x2048/async_fifo_16x2048.xci
+  read_ip -quiet D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/ip/clk_wiz_0/clk_wiz_0.xci
 OPTRACE "read constraints: implementation" START { }
   read_xdc D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/constrs_1/new/edge_detection_v2.xdc
 OPTRACE "read constraints: implementation" END { }
