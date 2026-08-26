@@ -340,7 +340,7 @@ end
 
 assign	cfg_done = (cnt_200us >= DELAY_20ms) ? 1'b1: 1'b0;
 
-sccb ov5640_iic_inst(
+ov5640_sccb ov5640_iic_inst(
 	.clk_24M	(clk_24M),
 	.s_rst_n    (s_rst_n),
 

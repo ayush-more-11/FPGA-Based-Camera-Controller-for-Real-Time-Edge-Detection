@@ -56,6 +56,7 @@ if {$::dispatch::connected} {
 }
 
 OPTRACE "synth_1" START { ROLLUP_AUTO }
+set_param chipscope.maxJobs 4
 set_param checkpoint.writeSynthRtdsInDcp 1
 set_msg_config -id {Synth 8-256} -limit 10000
 set_msg_config -id {Synth 8-638} -limit 10000
@@ -79,7 +80,7 @@ read_verilog -library xil_defaultlib {
   D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/ov5640_capture.v
   D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/ov5640_config.v
   D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/ov5640_pwd.v
-  D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/sccb.v
+  D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/ov5640_sccb.v
   D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/sdram_controller.v
   D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/vga_controller.v
   D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/vga_fifo_read.v
@@ -104,6 +105,9 @@ OPTRACE "Adding files" END { }
 foreach dcp [get_files -quiet -all -filter file_type=="Design\ Checkpoint"] {
   set_property used_in_implementation false $dcp
 }
+read_xdc D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/constrs_1/new/edge_detection_v2.xdc
+set_property used_in_implementation false [get_files D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/constrs_1/new/edge_detection_v2.xdc]
+
 set_param ips.enableIPCacheLiteLoad 1
 
 read_checkpoint -auto_incremental -incremental D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/utils_1/imports/synth_1/top.dcp
