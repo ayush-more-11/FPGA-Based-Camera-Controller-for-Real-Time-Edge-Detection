@@ -1,6 +1,6 @@
 `timescale 1ns/1ns
 
-module ov5640_iic(
+module sccb(
     input       clk_24M,    // Uses the 24MHz Camera XCLK
     input       s_rst_n,
         

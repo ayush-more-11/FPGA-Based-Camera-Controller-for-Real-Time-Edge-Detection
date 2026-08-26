@@ -1,4 +1,3 @@
-
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -110,7 +109,7 @@ module top(
     wire        capture_valid;
     wire [15:0] capture_data;
 
-    OV5640_Capture camera_capture (
+    ov5640_capture camera_capture (
         .pclk               (cam_pclk),
         .rst_n              (sys_rst_n),
         .vsync              (cam_vsync),
@@ -123,7 +122,7 @@ module top(
     // =======================================================
     // 4. WRITE FIFO (Crossing: 56 MHz -> 100 MHz)
     // =======================================================
-    wire [9:0]  sdram_wr_fifo_count;
+    wire [10:0]  sdram_wr_fifo_count;
     wire        sdram_wr_fifo_rd_en;
     wire [15:0] sdram_wr_fifo_dout;
 
@@ -144,7 +143,7 @@ module top(
     // =======================================================
     // 5. SDRAM CONTROLLER (100 MHz Domain)
     // =======================================================
-    wire [9:0]  sdram_rd_fifo_count;
+    wire [10:0]  sdram_rd_fifo_count;
     wire        sdram_rd_fifo_wr_en;
     wire [15:0] sdram_rd_fifo_din;
 

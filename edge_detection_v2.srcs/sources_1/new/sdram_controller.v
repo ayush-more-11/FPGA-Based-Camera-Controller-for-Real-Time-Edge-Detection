@@ -25,12 +25,12 @@ module sdram_controller (
     input  wire        rst_n,       // Active-low reset
 
     // --- Write FIFO Interface (From OV5640) ---
-    input  wire [9:0]  fifo_wr_count, // How many pixels are waiting in Write FIFO
+    input  wire [10:0]  fifo_wr_count, // How many pixels are waiting in Write FIFO
     output reg         fifo_wr_rd_en, // Read enable to pull pixels out of Write FIFO
     input  wire [15:0] fifo_wr_data,  // Pixel data from Write FIFO
 
     // --- Read FIFO Interface (To VGA) ---
-    input  wire [9:0]  fifo_rd_count, // How many pixels are already in Read FIFO
+    input  wire [10:0]  fifo_rd_count, // How many pixels are already in Read FIFO
     output reg         fifo_rd_wr_en, // Write enable to push pixels into Read FIFO
     output reg  [15:0] fifo_rd_data,  // Pixel data to Read FIFO
 
@@ -65,7 +65,7 @@ module sdram_controller (
                S_WRITE_CMD = 4'd6, S_WRITE_DAT = 4'd7, S_READ_ACT  = 4'd8,
                S_READ_CMD  = 4'd9, S_READ_DAT  = 4'd10,S_PRECHARGE = 4'd11;
 
-    reg [3:0]  state, next_state;
+    reg [3:0]  state;
     reg [3:0]  sdram_cmd;
     reg [15:0] delay_cnt;       
     reg [9:0]  burst_cnt;        // Tracks our 256-pixel bursts
@@ -161,7 +161,7 @@ module sdram_controller (
                     end 
                     // 3. Read Priority: If Read FIFO has space for >= 256 pixels
                     // (Assuming 2048 depth FIFO, threshold is < 1792)
-                    else if (fifo_rd_count < 11'd1792) begin
+                    else if (fifo_rd_count < 10'd1792) begin
                         state    <= S_READ_ACT;
                         bank_reg <= rd_addr_ptr[21:20];
                         addr_reg <= rd_addr_ptr[19:9];  // Row Address

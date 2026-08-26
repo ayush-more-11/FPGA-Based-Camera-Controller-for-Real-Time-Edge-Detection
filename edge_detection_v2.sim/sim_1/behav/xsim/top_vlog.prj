@@ -1,0 +1,18 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  --include "../../../../edge_detection_v2.ip_user_files/ipstatic" \
+"../../../../edge_detection_v2.gen/sources_1/ip/async_fifo_16x2048/sim/async_fifo_16x2048.v" \
+"../../../../edge_detection_v2.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_clk_wiz.v" \
+"../../../../edge_detection_v2.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.v" \
+"../../../../edge_detection_v2.srcs/sources_1/new/ov5640_capture.v" \
+"../../../../edge_detection_v2.srcs/sources_1/new/ov5640_config.v" \
+"../../../../edge_detection_v2.srcs/sources_1/new/ov5640_pwd.v" \
+"../../../../edge_detection_v2.srcs/sources_1/new/sdram_controller.v" \
+"../../../../edge_detection_v2.srcs/sources_1/new/vga_controller.v" \
+"../../../../edge_detection_v2.srcs/sources_1/new/vga_fifo_read.v" \
+"../../../../edge_detection_v2.srcs/sources_1/new/top.v" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort

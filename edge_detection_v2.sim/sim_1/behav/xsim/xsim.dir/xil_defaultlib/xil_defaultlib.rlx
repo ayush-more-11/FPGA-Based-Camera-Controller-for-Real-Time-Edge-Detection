@@ -1,0 +1,15 @@
+0.7
+2020.2
+Nov  8 2024
+22:36:57
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/async_fifo_16x2048/sim/async_fifo_16x2048.v,1787726439,verilog,,D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_clk_wiz.v,,async_fifo_16x2048,,,../../../../edge_detection_v2.ip_user_files/ipstatic,,,,,
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.v,1787727389,verilog,,D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/ov5640_capture.v,,clk_wiz_0,,,../../../../edge_detection_v2.ip_user_files/ipstatic,,,,,
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_clk_wiz.v,1787727389,verilog,,D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.v,,clk_wiz_0_clk_wiz,,,../../../../edge_detection_v2.ip_user_files/ipstatic,,,,,
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.sim/sim_1/behav/xsim/glbl.v,1724786425,verilog,,,,glbl,,,,,,,,
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/ov5640_capture.v,1787726153,verilog,,D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/ov5640_config.v,,ov5640_capture,,,../../../../edge_detection_v2.ip_user_files/ipstatic,,,,,
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/ov5640_config.v,1787316712,verilog,,D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/ov5640_pwd.v,,ov5640_config,,,../../../../edge_detection_v2.ip_user_files/ipstatic,,,,,
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/ov5640_pwd.v,1787317748,verilog,,D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/sdram_controller.v,,pwd,,,../../../../edge_detection_v2.ip_user_files/ipstatic,,,,,
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/sdram_controller.v,1787727772,verilog,,D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/vga_controller.v,,sdram_controller,,,../../../../edge_detection_v2.ip_user_files/ipstatic,,,,,
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/top.v,1787728825,verilog,,,,top,,,../../../../edge_detection_v2.ip_user_files/ipstatic,,,,,
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/vga_controller.v,1787728130,verilog,,D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/vga_fifo_read.v,,vga_controller,,,../../../../edge_detection_v2.ip_user_files/ipstatic,,,,,
+D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/vga_fifo_read.v,1787728271,verilog,,D:/Ayush/Xilinx/edge_detection_v2/edge_detection_v2.srcs/sources_1/new/top.v,,vga_fifo_read,,,../../../../edge_detection_v2.ip_user_files/ipstatic,,,,,
