@@ -4,9 +4,9 @@ module sdram_controller (
     input  wire        clk_100M,    // 100 MHz clock
     input  wire        rst_n,       // Active-low reset
 
-    // --- NEW VSYNC INPUTS ---
-    input  wire        cam_vsync,   // [FIXED] Properly declared inside ports
-    input  wire        vga_vsync,   // [FIXED] Properly declared inside ports
+    // --- VSYNC INPUTS ---
+    input  wire        cam_vsync,   // Camera frame start
+    input  wire        vga_vsync,   // VGA frame start
 
     // --- Write FIFO Interface (From OV5640) ---
     input  wire [10:0] fifo_wr_count, 
@@ -111,6 +111,36 @@ module sdram_controller (
     wire vga_vsync_pulse = (vga_sync[2:1] == 2'b01);
     
     // =========================================================
+    // PING-PONG BUFFER & FRAME READY INTERLOCK
+    // =========================================================
+    reg frame_ready;
+    reg wr_bank_sel; // 0 = Buffer A, 1 = Buffer B
+    reg rd_bank_sel; // Tracks which buffer the VGA should read
+
+    always @(posedge clk_100M or negedge rst_n) begin
+        if (!rst_n) begin
+            frame_ready <= 1'b0;
+            wr_bank_sel <= 1'b0;
+            rd_bank_sel <= 1'b0;
+        end else begin
+            // Mark the system ready only after the camera commits a full frame
+            if (state == S_WRITE_DAT && wr_addr_ptr == 22'd307199) begin
+                frame_ready <= 1'b1;
+            end
+            
+            // Swap write buffers when the camera starts a new frame
+            if (cam_vsync_pulse) begin
+                wr_bank_sel <= ~wr_bank_sel;
+            end
+            
+            // Lock the read buffer when the monitor starts a new frame
+            if (vga_vsync_pulse) begin
+                rd_bank_sel <= ~wr_bank_sel; // Always read the completed buffer
+            end
+        end
+    end
+
+    // =========================================================
     // MAIN STATE MACHINE
     // =========================================================
     always @(posedge clk_100M or negedge rst_n) begin
@@ -149,23 +179,19 @@ module sdram_controller (
                 S_IDLE: begin
                     dq_dir <= 1'b0; 
                     
-                    // --- THE FIX: Hard Reset Pointers on Frame Start ---
+                    // Hard Reset Pointers on Frame Start
                     if (cam_vsync_pulse) wr_addr_ptr <= 22'd0;
                     if (vga_vsync_pulse) rd_addr_ptr <= 22'd0;
 
-                    // [FIXED] Removed the duplicated if(refresh_req) block
                     if (refresh_req) begin
                         state <= S_REF_PRE;
                     end 
                     else if (fifo_wr_count >= 10'd256) begin
                         state    <= S_WRITE_ACT;
-                        bank_reg <= wr_addr_ptr[21:20]; 
-                        addr_reg <= wr_addr_ptr[19:9];  
                     end 
-                    else if (fifo_rd_count < 11'd1792) begin
+                    // Gate reads behind the frame_ready interlock
+                    else if (frame_ready && fifo_rd_count < 11'd1792) begin
                         state    <= S_READ_ACT;
-                        bank_reg <= rd_addr_ptr[21:20];
-                        addr_reg <= rd_addr_ptr[19:9];  
                     end
                 end
 
@@ -182,6 +208,8 @@ module sdram_controller (
 
                 S_WRITE_ACT: begin
                     sdram_cmd <= CMD_ACT;
+                    bank_reg  <= {wr_bank_sel, 1'b0}; // Route to Write Buffer
+                    addr_reg  <= wr_addr_ptr[19:9];  
                     state     <= S_WRITE_CMD;
                 end
 
@@ -210,6 +238,8 @@ module sdram_controller (
 
                 S_READ_ACT: begin
                     sdram_cmd <= CMD_ACT;
+                    bank_reg  <= {rd_bank_sel, 1'b0}; // Route to Read Buffer
+                    addr_reg  <= rd_addr_ptr[19:9];  
                     state     <= S_READ_CMD;
                 end
 

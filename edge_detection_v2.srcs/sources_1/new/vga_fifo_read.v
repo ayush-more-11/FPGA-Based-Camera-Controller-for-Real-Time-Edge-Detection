@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -19,52 +19,42 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+`timescale 1ns / 1ps
+
 module vga_fifo_read (
     input  wire        clk_25M,
     input  wire        reset,
     
     input  wire        video_on,
-    input  wire [15:0] fifo_data,   // 16-bit RGB565 pixel from Read FIFO
+    input  wire [15:0] fifo_data,
+    input  wire        fifo_empty,    // [ADDED] Gatekeeper flag
     
-    output wire        fifo_rd_en,  // Tells the Read FIFO to pop the next pixel
+    output wire        fifo_rd_en,
     output reg  [3:0]  vga_r,
     output reg  [3:0]  vga_g,
     output reg  [3:0]  vga_b
 );
 
-    // Request a new pixel from the FIFO on every active video clock cycle
-    assign fifo_rd_en = video_on;
+    // [ADDED] Never pop an empty FIFO
+    assign fifo_rd_en = video_on & ~fifo_empty;
 
-    // Standard FIFOs take 1 clock cycle to output data after rd_en goes high.
-    // We must delay the video_on gate by 1 cycle to align with the arriving pixel.
-    reg video_on_delay;
+    reg rd_valid_delay;
     
     always @(posedge clk_25M) begin
+        if (reset) rd_valid_delay <= 1'b0;
+        else       rd_valid_delay <= fifo_rd_en; // [ADDED] Track actual valid reads
+    end
+
+    always @(posedge clk_25M) begin
         if (reset) begin
-            video_on_delay <= 1'b0;
+            vga_r <= 4'd0; vga_g <= 4'd0; vga_b <= 4'd0;
+        end else if (rd_valid_delay) begin       // [MODIFIED] Only draw if data is valid
+            vga_r <= fifo_data[15:12];
+            vga_g <= fifo_data[10:7];
+            vga_b <= fifo_data[4:1];
         end else begin
-            video_on_delay <= video_on;
+            vga_r <= 4'd0; vga_g <= 4'd0; vga_b <= 4'd0; // Output clean black, not static
         end
     end
 
-    // Map 16-bit RGB565 to 12-bit VGA DAC
-    always @(posedge clk_25M) begin
-        if (reset) begin
-            vga_r <= 4'd0; 
-            vga_g <= 4'd0; 
-            vga_b <= 4'd0;
-        end else begin
-            if (video_on_delay) begin
-                // Extract the top 4 bits of each RGB565 channel
-                vga_r <= fifo_data[15:12]; 
-                vga_g <= fifo_data[10:7];  
-                vga_b <= fifo_data[4:1];   
-            end else begin
-                // Blank the screen during HSYNC/VSYNC porches
-                vga_r <= 4'd0; 
-                vga_g <= 4'd0; 
-                vga_b <= 4'd0;
-            end
-        end
-    end
 endmodule

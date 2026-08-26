@@ -58,11 +58,6 @@ module top(
     output wire [3:0]  vga_r,
     output wire [3:0]  vga_g,
     output wire [3:0]  vga_b
-    
-    // ------------------------------------
-    // Debug Output
-    // ------------------------------------
-    //output wire        led_cfg_done // [ADDED] Physical LED to check I2C config
 );
 
     // =======================================================
@@ -89,7 +84,6 @@ module top(
     // =======================================================
     wire sccb_ready;
 
-    // Power-down and hardware reset sequencer
     pwd power_sequencer (
         .sclk               (clk_24M),
         .s_rst_n            (sys_rst_n),
@@ -98,12 +92,9 @@ module top(
         .ov5640_sccb_begin  (sccb_ready)
     );
 
-    // 16-bit I2C Configuration Array
-    // Starts ONLY when sccb_ready goes high
     ov5640_config camera_config (
         .clk_24M            (clk_24M),
         .s_rst_n            (sccb_ready), 
-        //.cfg_done           (led_cfg_done), // [ADDED] Wire internal signal to physical LED
         .iic_clk            (cam_sioc),
         .iic_sda            (cam_siod)
     );
@@ -132,7 +123,7 @@ module top(
     wire [15:0] sdram_wr_fifo_dout;
 
     async_fifo_16x2048 write_fifo (
-        .rst                (~sys_rst_n),          // Active-high reset for Vivado IP
+        .rst                (~sys_rst_n),          
         .wr_clk             (cam_pclk),
         .rd_clk             (clk_100M),
         .din                (capture_data),
@@ -141,7 +132,7 @@ module top(
         .dout               (sdram_wr_fifo_dout),
         .full               (),
         .empty              (),
-        .rd_data_count      (sdram_wr_fifo_count), // Used by SDRAM Controller
+        .rd_data_count      (sdram_wr_fifo_count), 
         .wr_data_count      () 
     );
 
@@ -152,7 +143,6 @@ module top(
     wire        sdram_rd_fifo_wr_en;
     wire [15:0] sdram_rd_fifo_din;
     
-    // [ADDED] Moved these declarations up so the SDRAM controller can see them
     wire raw_hsync;
     wire raw_vsync;
     wire video_on;
@@ -161,20 +151,17 @@ module top(
         .clk_100M           (clk_100M),
         .rst_n              (sys_rst_n),
         
-        .cam_vsync          (cam_vsync), // [ADDED] Route camera frame start
-        .vga_vsync          (raw_vsync), // [ADDED] Route VGA frame start
+        .cam_vsync          (cam_vsync), 
+        .vga_vsync          (raw_vsync), 
         
-        // Write FIFO Interface
         .fifo_wr_count      (sdram_wr_fifo_count),
         .fifo_wr_rd_en      (sdram_wr_fifo_rd_en),
         .fifo_wr_data       (sdram_wr_fifo_dout),
         
-        // Read FIFO Interface
         .fifo_rd_count      (sdram_rd_fifo_count),
         .fifo_rd_wr_en      (sdram_rd_fifo_wr_en),
         .fifo_rd_data       (sdram_rd_fifo_din),
         
-        // Physical SDRAM Pins
         .sdram_cke          (sdram_cke),
         .sdram_cs_n         (sdram_cs_n),
         .sdram_ras_n        (sdram_ras_n),
@@ -191,6 +178,7 @@ module top(
     // =======================================================
     wire        vga_fifo_rd_en;
     wire [15:0] vga_fifo_dout;
+    wire        read_fifo_empty; // Wired flag to prevent empty reads
 
     async_fifo_16x2048 read_fifo (
         .rst                (~sys_rst_n),
@@ -201,9 +189,9 @@ module top(
         .rd_en              (vga_fifo_rd_en),
         .dout               (vga_fifo_dout),
         .full               (),
-        .empty              (),
+        .empty              (read_fifo_empty),     
         .rd_data_count      (),
-        .wr_data_count      (sdram_rd_fifo_count)  // Used by SDRAM Controller
+        .wr_data_count      (sdram_rd_fifo_count)  
     );
 
     // =======================================================
@@ -224,6 +212,7 @@ module top(
         .reset              (~sys_rst_n),
         .video_on           (video_on),
         .fifo_data          (vga_fifo_dout),
+        .fifo_empty         (read_fifo_empty),     // Gates the read requests
         .fifo_rd_en         (vga_fifo_rd_en),
         .vga_r              (vga_r),
         .vga_g              (vga_g),
@@ -232,9 +221,6 @@ module top(
 
     // -------------------------------------------------------
     // VGA Sync Alignment Delay
-    // Because vga_fifo_read delays the RGB output by 1 clock 
-    // cycle (to match FIFO read latency), we must delay HSYNC 
-    // and VSYNC by 1 cycle as well to keep the frame aligned.
     // -------------------------------------------------------
     reg hsync_delay, vsync_delay;
     
